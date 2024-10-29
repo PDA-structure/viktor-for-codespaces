@@ -1,1 +1,4 @@
 viktor==14.16.1
+
+openseespy==(3.7.0.4)
+
