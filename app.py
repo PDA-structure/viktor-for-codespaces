@@ -44,11 +44,11 @@ class Parametrization(vkt.Parametrization):
     tab_2.section_4.table_loads.col_2 = vkt.NumberField('Fx (N)')
     tab_2.section_4.table_loads.col_3 = vkt.NumberField('Fy (N)')
 
-    # Tab 3
-    tab_3 = vkt.Tab("Results Export")
+    # TAB 3 - RESULTS EXPORT
+    tab_3 = vkt.Tab("Export Results")
     tab_3.section_1 = vkt.Section("Export Results")
-    tab_3.section_1.info = vkt.Text("hello world")
-
+    tab_3.section_1.info = vkt.Text(info_export)
+    tab_3.section_1.download_btn = vkt.DownloadButton('Download Results', method='download_file')
 
 class Controller(vkt.Controller):
     label = 'OpenSeesPy 2D Truss Analysis - from EngineeringSkills.com'
@@ -126,6 +126,14 @@ class Controller(vkt.Controller):
         )
 
         return vkt.DataResult(data_group)
+
+    def download_file(self, params, **kwargs):
+        nodes, members = processGeometryFile(params.tab_2.section_2.geometry_file)
+        restraints = computerRestraintArray(params.tab_2.section_3.table_restraints)
+        forces = computeForceArray(params.tab_2.section_4.table_loads)
+        mbr_disp, mbr_forces, node_disp, reactions = analyseStructure(params.tab_2.section_1.E, params.tab_2.section_1.A, nodes, members, restraints, forces)
+        result = exportResults(mbr_forces, node_disp, reactions, members)
+        return vkt.DownloadResult(file_content=result, file_name='results.csv')
 
     def download_demo_file(self,params, **kwargs):
         file = exportDemo()

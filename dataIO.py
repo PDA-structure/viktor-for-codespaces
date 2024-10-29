@@ -84,8 +84,32 @@ def computeForceArray(inputData):
 	return np.array(forces)
 
 def exportResults(mbr_forces, node_disp, reactions, members):
-    # fill in function body later
-    return
+	# Create a BytesIO object in binary mode
+	output = io.BytesIO()
+
+	# Write the data, manually encoding each row as bytes
+
+	# Write member forces
+	output.write("MEMBER FORCES, kN \n".encode('utf-8'))
+	for i, mbr in enumerate(members):
+		output.write(f"Member {i+1} (nodes {mbr[0]} to {mbr[1]}), {mbr_forces[i]}\n".encode('utf-8'))
+
+	#Write nodal displacements
+	output.write("\n".encode('utf-8'))
+	output.write("NODAL DISPLACEMENTS, Ux (mm), Uy (mm)\n".encode('utf-8'))
+	for i, d in enumerate(node_disp):
+		output.write(f"Node {i+1}, {d[0]}, {d[1]} \n".encode('utf-8'))
+
+	# Write support reactions
+	output.write("\n".encode('utf-8'))
+	output.write("SUPPORT REACTIONS, Rx (kN), Ry (kN)\n".encode('utf-8'))
+	for i, r in enumerate(reactions):
+		output.write(f"Node {r[0]}, {r[1]}, {r[2]} \n".encode('utf-8'))
+
+	# To use the BytesIO object, we need to seek back to the start
+	output.seek(0)
+
+	return output
 
 def exportDemo():
     file_path = os.path.join(os.path.dirname(__file__), 'demo-geometry.csv')

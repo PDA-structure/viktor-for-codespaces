@@ -63,3 +63,9 @@ At any node (again identified by its node number), we can specify:
 - A horizontal force magnitude, $F_x (N)$
 - A vertical force magnitude, $F_y (N)$
 """
+
+info_export="""
+## Exporting Results to CSV
+
+The results of our analysis are reported in the graphical and tabular results panes, to the right. However, it may also be useful to export all results in a single csv file. So, we demonstrate that here. Note that we could also build a PDF report - but I'll leave that as an exercise for you!
+"""
