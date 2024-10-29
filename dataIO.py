@@ -83,11 +83,6 @@ def computeForceArray(inputData):
 
 	return np.array(forces)
 
-
-
-
-
-
 def exportResults(mbr_forces, node_disp, reactions, members):
     # fill in function body later
     return

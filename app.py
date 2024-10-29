@@ -4,6 +4,7 @@ from analysis import *
 from visualisation import *
 from dataIO import *
 from text import *
+from pathlib import Path
 
 class Parametrization(vkt.Parametrization):
     # Tab 1
@@ -52,6 +53,42 @@ class Parametrization(vkt.Parametrization):
 class Controller(vkt.Controller):
     label = 'OpenSeesPy 2D Truss Analysis - from EngineeringSkills.com'
     parametrization = Parametrization
+    @vkt.ImageView("Structure", duration_guess=1)
+    def createStructurePlot(self, params, **kwargs):
+        if params.tab_2.section_2.geometry_file:
+            nodes, members = processGeometryFile(params.tab_2.section_2.geometry_file)
+            svg_data = plotStructure(nodes, members)
+            return vkt.ImageResult(svg_data)
+        
+        else:
+            image_path = Path(__file__).parent /'assets' / 'jpeg-file.jpg'
+            return vkt.ImageResult.from_path(image_path)
+
+    @vkt.ImageView("Graphical Results", duration_guess=1)
+    def createResultsPlot(self, params, **kwargs):
+
+        image_path = Path(__file__).parent /'assets' / 'jpeg-file.jpg'
+
+        #Only attempt workflow if geometry uploaded and at least two supports defined
+        if params.tab_2.section_2.geometry_file and len(params.tab_2.section_3.table_restraints)>1:
+          
+          #Make sure there are no 'None' restraint values
+          if all(item.col_2 is not None for item in params.tab_2.section_3.table_restraints):
+            nodes, members = processGeometryFile(params.tab_2.section_2.geometry_file)
+            restraints = computerRestraintArray(params.tab_2.section_3.table_restraints)
+            forces = computeForceArray(params.tab_2.section_4.table_loads)
+            mbr_disp, mbr_forces, node_disp, reactions = analyseStructure(params.tab_2.section_1.E, params.tab_2.section_1.A, nodes, members, restraints, forces)
+            svg_data = plotResponse(nodes, members, mbr_disp, mbr_forces, params.tab_2.section_1.xFac)
+            return vkt.ImageResult(svg_data)
+          
+          #Else plot placeholder image
+          else: 
+            return vkt.ImageResult.from_path(image_path)
+          
+
+        #Else plot placeholder image
+        else:
+            return vkt.ImageResult.from_path(image_path)
 
     @vkt.DataView("Results Data", duration_guess=1)
     def createResultsData(self, params, **kwargs):
