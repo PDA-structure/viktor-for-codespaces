@@ -44,3 +44,22 @@ Nodes are defined by their **x** and **y** position and numbered sequentially. T
 info_geometry3="""
 ### Upload Geometry File
 """
+
+info_restraints="""
+## Structure Restraints
+Next, we'll define the restraints. This will give us a good opportunity to demonstrate how to accept and process tabular data.
+
+At any node (identified by its node number), we can specify:
+- A pin support which provides translational restraint in the x and y direction
+- A horizontal roller which provides translational restraint in the y direction only
+- A vertical roller which provides translational restraint in the x direction only
+"""
+
+info_loads="""
+## Applied Loads
+Finally, we define any nodal loads applied to the structure. Again, we accept user input in a tabular format here. We could just as easily accept a csv file, in fact, we could combine all structure and loading information into a single cvs file upload if we wanted.
+
+At any node (again identified by its node number), we can specify:
+- A horizontal force magnitude, $F_x (N)$
+- A vertical force magnitude, $F_y (N)$
+"""

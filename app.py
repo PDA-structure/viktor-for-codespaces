@@ -1,5 +1,5 @@
 import viktor as vkt
-# Utility fucntions and text blocks
+# Utility functions and text blocks
 from analysis import *
 from visualisation import *
 from dataIO import *
@@ -30,10 +30,18 @@ class Parametrization(vkt.Parametrization):
     
     # TAB 2 - SECTION 3 - RESTRAINTS
     tab_2.section_3 = vkt.Section("Define Restraints")
-    tab_2.section_3.info = vkt.Text("Hello World")
+    tab_2.section_3.info = vkt.Text(info_restraints)
+    tab_2.section_3.table_restraints = vkt.Table('Restraint Definition')
+    tab_2.section_3.table_restraints.col_1 = vkt.IntegerField('Node number')
+    tab_2.section_3.table_restraints.col_2 = vkt.OptionField('Restraint Type', options=['Pin', 'X-Roller', 'Y-Roller'])
 
+    # TAB 2 - APPLIED LOADS
     tab_2.section_4 = vkt.Section("Define Applied Loads")
-    tab_2.section_4.info = vkt.Text("Hello World")
+    tab_2.section_4.info = vkt.Text(info_loads)
+    tab_2.section_4.table_loads = vkt.Table('Load Definition')
+    tab_2.section_4.table_loads.col_1 = vkt.IntegerField('Node number')
+    tab_2.section_4.table_loads.col_2 = vkt.NumberField('Fx (N)')
+    tab_2.section_4.table_loads.col_3 = vkt.NumberField('Fy (N)')
 
     # Tab 3
     tab_3 = vkt.Tab("Results Export")
@@ -44,6 +52,43 @@ class Parametrization(vkt.Parametrization):
 class Controller(vkt.Controller):
     label = 'OpenSeesPy 2D Truss Analysis - from EngineeringSkills.com'
     parametrization = Parametrization
+
+    @vkt.DataView("Results Data", duration_guess=1)
+    def createResultsData(self, params, **kwargs):
+        data_items_disp = []
+        data_items_force = []
+        data_items_reactions = []
+         
+	    # Only attempt workflow if geometry uploaded and at least two supports defined
+        if params.tab_2.section_2.geometry_file and len(params.tab_2.section_3.table_restraints)>1:
+
+		# Make sure there are no 'None' restraint values
+            if all(item.col_2 is not None for item in params.tab_2.section_3.table_restraints):
+                
+                nodes, members = processGeometryFile(params.tab_2.section_2.geometry_file)
+                restraints = computerRestraintArray(params.tab_2.section_3.table_restraints)
+                forces = computeForceArray(params.tab_2.section_4.table_loads)
+                mbr_disp, mbr_forces, node_disp, reactions = analyseStructure(params.tab_2.section_1.E, params.tab_2.section_1.A, nodes, members, restraints, forces)
+                
+                for i, d in enumerate(node_disp):
+                    resultString = f"Ux: {d[0]} mm, Uy: {d[1]} mm"
+                    data_items_disp.append(vkt.DataItem(f'Node {i+1}', resultString))
+                    
+                for i, mbr in enumerate(members):
+                    resultString = f'{mbr_forces[i]} kN'
+                    data_items_force.append(vkt.DataItem(f'Member {i+1} (nodes {mbr[0]} to {mbr[1]})', resultString))
+                    
+                for i, r in enumerate(reactions):
+                    resultString = f'Rx: {r[1]} kN, Ry: {r[2]} kN'
+                    data_items_reactions.append(vkt.DataItem(f'Node {r[0]}', resultString))
+                    
+        data_group = vkt.DataGroup(
+            vkt.DataItem('Displacement','', subgroup=vkt.DataGroup(*data_items_disp)),
+            vkt.DataItem('Member Forces','', subgroup=vkt.DataGroup(*data_items_force)),
+            vkt.DataItem('Reactions','', subgroup=vkt.DataGroup(*data_items_reactions))
+        )
+
+        return vkt.DataResult(data_group)
 
     def download_demo_file(self,params, **kwargs):
         file = exportDemo()
